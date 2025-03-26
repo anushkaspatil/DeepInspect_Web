@@ -1,0 +1,120 @@
+/* Login Page Container */
+.container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 80%;
+    max-width: 62.5rem; /* 1000px */
+    background-color: white;
+    border-radius: 0.625rem; /* 10px */
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    margin-top: 3.125rem; /* 50px */
+    height: 60vh;
+}
+
+/* Left-side styling */
+.left-side {
+    background-color: #1E2A47;
+    color: white;
+    width: 50%;
+    padding: 2.5rem; /* 40px */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+/* Role dropdown */
+.role-select {
+    background-color: #4C5C82;
+    color: white;
+    border: none;
+    padding: 0.625rem; /* 10px */
+    font-size: 1rem; /* 16px */
+    margin-bottom: 1.25rem; /* 20px */
+    border-radius: 0.3125rem; /* 5px */
+    width: 80%;
+    text-align: center;
+}
+
+/* Continue button */
+.continue-btn {
+    background-color: white;
+    color: #1E2A47;
+    border: 0.125rem solid #4C5C82; /* 2px */
+    padding: 0.625rem; /* 10px */
+    font-size: 1rem; /* 16px */
+    cursor: pointer;
+    border-radius: 0.3125rem; /* 5px */
+    width: 80%;
+    transition: 0.3s;
+}
+
+.continue-btn:hover {
+    background-color: #4C5C82;
+    color: white;
+}
+
+/* Right-side styling */
+.right-side {
+    width: 50%;
+    padding: 2.5rem; /* 40px */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+/* Login form elements */
+h2 {
+    font-size: 1.625rem; /* 26px */
+    margin-bottom: 1.25rem; /* 20px */
+    color: #1E2A47;
+}
+
+input {
+    padding: 0.75rem; /* 12px */
+    margin-bottom: 1.25rem; /* 20px */
+    border: 0.0625rem solid #ddd; /* 1px */
+    border-radius: 0.3125rem; /* 5px */
+    width: 80%;
+    font-size: 1rem; /* 16px */
+}
+
+input[type="password"] {
+    margin-bottom: 1.875rem; /* 30px */
+}
+
+/* Login button */
+.login-btn {
+    background-color: #1E2A47;
+    color: white;
+    border: none;
+    padding: 0.75rem; /* 12px */
+    width: 80%;
+    font-size: 1rem; /* 16px */
+    cursor: pointer;
+    border-radius: 0.3125rem; /* 5px */
+    transition: 0.3s;
+}
+
+.login-btn:hover {
+    background-color: #4C5C82;
+}
+
+/* Responsive Design */
+@media (max-width: 48rem) { /* 768px */
+    .container {
+        flex-direction: column;
+        width: 90%;
+    }
+
+    .left-side,
+    .right-side {
+        width: 100%;
+        padding: 1.875rem; /* 30px */
+    }
+}
