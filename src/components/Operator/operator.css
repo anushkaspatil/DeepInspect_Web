@@ -1,0 +1,22 @@
+.right{
+    background-color: #1E2A47;
+}
+
+.header{
+    text-align: center;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.left-sec{
+    width: 50%;
+}
+
+.right-sec{
+    width: 50%;
+    background-color: #1E2A47;
+}
+
+.card{
+    height: 18rem;
+}
