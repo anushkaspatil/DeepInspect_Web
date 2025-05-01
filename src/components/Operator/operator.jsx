@@ -45,7 +45,7 @@ function Operator() {
                       <strong>Batch No.:</strong> {defect.batch}
                     </Card.Text>
                     <Card.Text className="mb-2" style={{ lineHeight: "1.2" }}>
-                      <strong>:</strong>
+                      <strong>Store Record:</strong>
                     </Card.Text>
                     <Button variant="primary" className="me-2">Yes</Button>
                     <Button variant="secondary">No</Button>

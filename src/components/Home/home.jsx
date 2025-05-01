@@ -1,4 +1,10 @@
-function Home() {
+import About from "../About/about";
+import Features from "../Features/features";
+import Partners from "../Partners/partners";  
+import Footer from "../Footer/footer";
+import background from '../../assets/home_bg.jpg'; // adjust path
+
+function Home(){
     return (
       <div className="App">
         <header className="App-header">
@@ -6,6 +12,10 @@ function Home() {
           <h1 className='display-4 fw-bold'><strong>DEEPINSPECT!</strong></h1>
           <h3>Defect Detection and Localization</h3>
         </header>
+        <About />
+        <Features />
+        <Partners />
+        <Footer />
       </div>
     );
   }

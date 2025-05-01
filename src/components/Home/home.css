@@ -1,0 +1,7 @@
+.App-header{
+    background-image: url('src/assets/home_bg.jpg');
+    background-size: cover;
+    background-position: center;
+    height: 100vh; /* full viewport height */
+    width: 100%;
+}
