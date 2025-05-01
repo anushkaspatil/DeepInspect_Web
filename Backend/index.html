@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YOLOv8 Image Upload</title>
+</head>
+<body>
+    <h2>Upload an Image for Prediction</h2>
+    <form action="/predict/" enctype="multipart/form-data" method="post">
+        <input type="file" name="file" accept="image/*" required>
+        <button type="submit">Upload</button>
+    </form>
+</body>
+</html>
