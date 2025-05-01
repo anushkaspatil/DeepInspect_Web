@@ -1,34 +1,49 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import FileResponse
-from ultralytics import YOLO
-import shutil
-import os
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import shutil, os
+from datetime import datetime
+import uuid
+import torch
+from predict import detect_defect
+from database import save_defect_record
 
 app = FastAPI()
 
-# Load the YOLOv8 model
-model = YOLO("Model/best.pt")
+# Allow React frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Make sure the static folder exists
-os.makedirs("static", exist_ok=True)
-
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the YOLOv8 detection API!"}
+class DefectRecord(BaseModel):
+    type: str
+    time: str
+    item: int
+    stream: int
+    batch: int
+    image_name: str
 
 @app.post("/predict/")
 async def predict(file: UploadFile = File(...)):
-    # Save uploaded image to disk
-    image_path = f"static/{file.filename}"
-    with open(image_path, "wb") as buffer:
+    image_id = str(uuid.uuid4())
+    input_path = f"uploads/{image_id}_{file.filename}"
+    output_path = f"outputs/{image_id}_{file.filename}"
+
+    # Save uploaded file
+    with open(input_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # Run prediction
-    results = model(image_path)
+    # Run inference using your YOLO model
+    defect_type = detect_defect(input_path, output_path)
 
-    # Save annotated image
-    output_path = "static/predicted.jpg"
-    results[0].save(filename=output_path)
+    # Return processed image
+    return FileResponse(path=output_path, media_type="image/jpeg")
 
-    # Return annotated image
-    return FileResponse(output_path, media_type="image/jpeg")
+@app.post("/store/")
+async def store_defect(data: DefectRecord):
+    save_defect_record(data)
+    return {"message": "Stored successfully"}
