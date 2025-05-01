@@ -21,7 +21,7 @@ function Operator() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
-      
+
       // Reset states when new file is selected
       setPredictedImg(null);
       setDefectInfo(null);
@@ -37,7 +37,7 @@ function Operator() {
     }
 
     setIsLoading(true);
-    
+
     const formData = new FormData();
     formData.append("file", selectedFile);
 
@@ -61,11 +61,11 @@ function Operator() {
         const metadataResponse = await axios.get("http://127.0.0.1:8000/predict/metadata", {
           params: { filename: selectedFile.name }
         });
-        
+
         setDefectInfo(metadataResponse.data);
       } catch (metadataError) {
         console.error("Failed to get defect metadata:", metadataError);
-        
+
         // Fallback to simulated data if metadata API fails
         setDefectInfo({
           type: "Unknown Defect",
@@ -91,7 +91,7 @@ function Operator() {
     }
 
     setIsLoading(true);
-    
+
     try {
       await axios.post("http://127.0.0.1:8000/store/", {
         defect_type: defectInfo.type,
@@ -101,7 +101,7 @@ function Operator() {
         batch_number: defectInfo.batch,
         image_name: selectedFile.name,
       });
-      
+
       setStoreSuccess(true);
     } catch (error) {
       console.error("Store failed:", error);
@@ -125,20 +125,20 @@ function Operator() {
         {/* Left Section */}
         <Col md={8} className="p-4 left-sec">
           <h1 className="text header">Real-time Diagnostics</h1>
-          
+
           {/* File Upload Section */}
           <Form.Group controlId="formFile" className="mb-3">
             <Form.Label>Select Defect Image</Form.Label>
-            <Form.Control 
-              type="file" 
-              onChange={handleFileChange} 
+            <Form.Control
+              type="file"
+              onChange={handleFileChange}
               accept="image/*"
               disabled={isLoading}
             />
           </Form.Group>
-          
-          <Button 
-            variant="primary" 
+
+          <Button
+            variant="primary"
             onClick={handleUpload}
             disabled={!selectedFile || isLoading}
             className="mb-4"
@@ -154,13 +154,18 @@ function Operator() {
           </Button>
 
           {/* Defect Result Card */}
+          {/* Defect Result Card */}
           {predictedImg && defectInfo && (
-            <Card className="mb-3 card">
-              <Row className="g-0">
-                <Col md={4}>
-                  <Card.Img src={predictedImg} className="img-fluid rounded-start" alt="Detected Defect" />
+            <Card className="mb-3 card" >
+              <Row className="g-0" style={{ height: "100%" }}>
+                <Col style={{ width: "70%", height: "100%" }}>
+                  <Card.Img
+                    src={predictedImg}
+                    className="img-fluid rounded-start w-100"
+                    alt="Detected Defect"
+                  />
                 </Col>
-                <Col md={8}>
+                <Col style={{ width: "30%"}}>
                   <Card.Body className="p-3">
                     <Card.Title className="mt-2 mb-3 fw-bold">DEFECT DETECTED</Card.Title>
                     <Card.Text className="mb-1" style={{ lineHeight: "1.2" }}>
@@ -187,15 +192,15 @@ function Operator() {
                       </div>
                     ) : (
                       <div>
-                        <Button 
-                          variant="primary" 
-                          className="me-2" 
+                        <Button
+                          variant="primary"
+                          className="me-2"
                           onClick={handleStoreDefect}
                           disabled={isLoading}
                         >
                           {isLoading ? 'Storing...' : 'Yes'}
                         </Button>
-                        <Button 
+                        <Button
                           variant="secondary"
                           onClick={handleDeclineStore}
                           disabled={isLoading}
@@ -209,6 +214,7 @@ function Operator() {
               </Row>
             </Card>
           )}
+
         </Col>
 
         {/* Right Section */}
