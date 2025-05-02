@@ -10,7 +10,7 @@ import os
 from datetime import datetime
 import sqlite3
 from pydantic import BaseModel
-from ultralytics import YOLO  # Import YOLO from ultralytics for YOLOv8
+import onnxruntime as ort
 
 app = FastAPI(title="Defect Detection API", 
              description="API for detecting and storing product defects",
@@ -39,15 +39,14 @@ app.add_middleware(
 )
 
 # Load the YOLOv8 model
-MODEL_PATH = "Model/best.pt"
+MODEL_PATH = "Model/best.onnx"
+session = ort.InferenceSession(MODEL_PATH)
 model = None
 
 def load_model():
     global model
     if model is None:
         # Load YOLOv8 model
-        from ultralytics import YOLO
-        model = YOLO(MODEL_PATH)
         model.conf = 0.25  # Confidence threshold
     return model
 
@@ -92,62 +91,71 @@ async def predict_defect(file: UploadFile = File(...)):
     if not file:
         raise HTTPException(status_code=400, detail="No file uploaded")
     
-    # Read the image
+    # Read and decode image
     contents = await file.read()
     nparr = np.frombuffer(contents, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    
     if img is None:
         raise HTTPException(status_code=400, detail="Invalid image file")
-    
-    # Save image temporarily (YOLOv8 works better with file paths)
+
+    # Save temporarily for debugging or traceability
     temp_image_path = f"temp_{file.filename}"
     cv2.imwrite(temp_image_path, img)
-    
+
     try:
-        # Load model if not already loaded
-        model = load_model()
-        
-        # Make prediction with YOLOv8
-        results = model(temp_image_path)
-        
-        # Process results to get defect type
-        result = results[0]  # Get first result
-        
+        # Preprocess image for ONNX model (resize, normalize, etc.)
+        resized = cv2.resize(img, (640, 640))
+        img_rgb = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
+        img_input = img_rgb.transpose(2, 0, 1).astype(np.float32)  # (3, 640, 640)
+        img_input /= 255.0  # normalize to 0–1
+        img_input = np.expand_dims(img_input, axis=0)  # shape: (1, 3, 640, 640)
+
+        # Run inference
+        input_name = session.get_inputs()[0].name
+        outputs = session.run(None, {input_name: img_input})
+
+        # Postprocess outputs
+        # YOLOv8 ONNX outputs one tensor with shape (batch, num_preds, 85) = [x, y, w, h, conf, cls...]
+        pred = outputs[0][0]  # shape: (num_boxes, 85)
+        boxes = pred[pred[:, 4] > 0.25]  # confidence threshold
+
         defect_type = "No defect detected"
-        if len(result.boxes) > 0:
-            # Get the first detected defect class
-            class_id = int(result.boxes[0].cls.item())
-            defect_type = result.names[class_id]
-        
-        # Create defect info
+        if boxes.shape[0] > 0:
+            class_id = int(boxes[0][5])
+            defect_type = f"Class {class_id}"  # Optional: replace with actual label map if available
+
+            # Draw bounding box
+            x_center, y_center, width, height = boxes[0][:4]
+            x1 = int((x_center - width / 2) * img.shape[1] / 640)
+            y1 = int((y_center - height / 2) * img.shape[0] / 640)
+            x2 = int((x_center + width / 2) * img.shape[1] / 640)
+            y2 = int((y_center + height / 2) * img.shape[0] / 640)
+
+            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(img, defect_type, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+        # Cache metadata
         current_time = datetime.now().strftime("%H:%M:%S")
         defect_info = {
             "type": defect_type,
             "time": current_time,
-            "item": np.random.randint(1000, 2000),  # Simulated item number
-            "stream": np.random.randint(1, 6),      # Simulated stream number
-            "batch": np.random.randint(1, 21)       # Simulated batch number
+            "item": np.random.randint(1000, 2000),
+            "stream": np.random.randint(1, 6),
+            "batch": np.random.randint(1, 21)
         }
-        
-        # Store in cache
         defect_metadata_cache[file.filename] = defect_info
-        
-        # Get the plotted image with boxes
-        results_img = result.plot()
-        
-        # Convert back to image bytes
-        is_success, buffer = cv2.imencode(".jpg", results_img)
+
+        # Encode image to return
+        is_success, buffer = cv2.imencode(".jpg", img)
         if not is_success:
             raise HTTPException(status_code=500, detail="Failed to process image")
-        
-        # Return the processed image
+
         return StreamingResponse(io.BytesIO(buffer.tobytes()), media_type="image/jpeg")
-    
+
     finally:
-        # Clean up temporary file
         if os.path.exists(temp_image_path):
             os.remove(temp_image_path)
+
 
 @app.get("/predict/metadata")
 async def get_defect_metadata(filename: str):
