@@ -12,10 +12,17 @@ function Home(){
           <h1 className='display-4 fw-bold'><strong>DEEPINSPECT!</strong></h1>
           <h3>Defect Detection and Localization</h3>
         </header>
+        <section id="about">
         <About />
+      </section>
+
+      <section id="features">
         <Features />
+      </section>
+
+      <section id="partners">
         <Partners />
-        <Footer />
+      </section>
       </div>
     );
   }
