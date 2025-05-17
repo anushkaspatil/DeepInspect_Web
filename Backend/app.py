@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
-from typing import Optional
+from typing import Optional, Dict # Added Dict
 import torch
 import cv2
 import numpy as np
@@ -10,13 +10,13 @@ import os
 from datetime import datetime
 import sqlite3
 from pydantic import BaseModel
-import onnxruntime as ort
+from ultralytics import YOLO
 
-app = FastAPI(title="Defect Detection API", 
-             description="API for detecting and storing product defects",
-             version="1.0.0")
+app = FastAPI(title="Defect Detection API",
+              description="API for detecting and storing product defects",
+              version="1.0.0")
 
-# Root endpoint for API information
+# Root endpoint
 @app.get("/")
 async def root():
     return {
@@ -32,23 +32,30 @@ async def root():
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Load the YOLOv8 model
-MODEL_PATH = "Model/best.onnx"
-session = ort.InferenceSession(MODEL_PATH)
-model = None
-
-def load_model():
-    global model
-    if model is None:
-        # Load YOLOv8 model
-        model.conf = 0.25  # Confidence threshold
-    return model
+# --- Load the YOLOv8 model and get class names ---
+MODEL_PATH = "Model/best.pt"
+class_names: Dict[int, str] = {} # Initialize class_names dictionary
+try:
+    model = YOLO(MODEL_PATH)
+    # *** IMPORTANT: Access the class names from the model ***
+    if hasattr(model, 'names') and isinstance(model.names, dict):
+        class_names = model.names
+        print(f"Model loaded successfully. Class names: {class_names}")
+    else:
+        print("Warning: Could not automatically load class names from the model.")
+        # You might need to manually define them if the above fails, e.g.:
+        # class_names = {0: 'rolled pit', 1: 'scratch', 2: 'inclusion', ...}
+except Exception as e:
+    print(f"Error loading YOLO model from {MODEL_PATH}: {e}")
+    # Handle the error appropriately, maybe raise an exception or exit
+    # For now, we'll let it continue but predictions might fail or use default names
+    model = None # Indicate model loading failed
 
 # Database setup
 DB_PATH = "defects.db"
@@ -71,10 +78,8 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Initialize the database on startup
 init_db()
 
-# Create a class for defect storage request
 class DefectStore(BaseModel):
     defect_type: str
     timestamp: str
@@ -83,61 +88,53 @@ class DefectStore(BaseModel):
     batch_number: int
     image_name: str
 
-# Metadata cache to store defect information
 defect_metadata_cache = {}
 
 @app.post("/predict/")
 async def predict_defect(file: UploadFile = File(...)):
+    if not model: # Check if model loaded successfully
+        raise HTTPException(status_code=500, detail="Model not loaded properly.")
+
     if not file:
         raise HTTPException(status_code=400, detail="No file uploaded")
-    
-    # Read and decode image
+
     contents = await file.read()
     nparr = np.frombuffer(contents, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     if img is None:
         raise HTTPException(status_code=400, detail="Invalid image file")
 
-    # Save temporarily for debugging or traceability
-    temp_image_path = f"temp_{file.filename}"
-    cv2.imwrite(temp_image_path, img)
+    # It's generally better to predict directly on the numpy array
+    # Saving and reloading adds unnecessary I/O, unless required by the model interface
+    # temp_image_path = f"temp_{file.filename}"
+    # cv2.imwrite(temp_image_path, img)
 
     try:
-        # Preprocess image for ONNX model (resize, normalize, etc.)
-        resized = cv2.resize(img, (640, 640))
-        img_rgb = cv2.cvtColor(resized, cv2.COLOR_BGR2RGB)
-        img_input = img_rgb.transpose(2, 0, 1).astype(np.float32)  # (3, 640, 640)
-        img_input /= 255.0  # normalize to 0–1
-        img_input = np.expand_dims(img_input, axis=0)  # shape: (1, 3, 640, 640)
+        # Predict using the image in memory (more efficient)
+        results = model.predict(source=img, save=False, conf=0.25)
+        pred = results[0] # Get the first prediction result
+        boxes = pred.boxes
+        defect_type = "No defect detected" # Default value
 
-        # Run inference
-        input_name = session.get_inputs()[0].name
-        outputs = session.run(None, {input_name: img_input})
+        if boxes and boxes.cls.numel() > 0:
+            # Get the class ID of the first detected object
+            class_id = int(boxes.cls[0].item())
 
-        # Postprocess outputs
-        # YOLOv8 ONNX outputs one tensor with shape (batch, num_preds, 85) = [x, y, w, h, conf, cls...]
-        pred = outputs[0][0]  # shape: (num_boxes, 85)
-        boxes = pred[pred[:, 4] > 0.25]  # confidence threshold
+            # *** CHANGE: Look up the class name using the class_id ***
+            defect_type = class_names.get(class_id, f"Unknown Class {class_id}") # Use .get for safety
 
-        defect_type = "No defect detected"
-        if boxes.shape[0] > 0:
-            class_id = int(boxes[0][5])
-            defect_type = f"Class {class_id}"  # Optional: replace with actual label map if available
+            # Get bounding box coordinates
+            x1, y1, x2, y2 = map(int, boxes.xyxy[0].tolist())
 
-            # Draw bounding box
-            x_center, y_center, width, height = boxes[0][:4]
-            x1 = int((x_center - width / 2) * img.shape[1] / 640)
-            y1 = int((y_center - height / 2) * img.shape[0] / 640)
-            x2 = int((x_center + width / 2) * img.shape[1] / 640)
-            y2 = int((y_center + height / 2) * img.shape[0] / 640)
-
+            # Draw rectangle and label on the image
             cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(img, defect_type, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            cv2.putText(img, defect_type, (x1, y1 - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-        # Cache metadata
+        # Metadata caching
         current_time = datetime.now().strftime("%H:%M:%S")
         defect_info = {
-            "type": defect_type,
+            "type": defect_type, # Use the actual defect name (or "No defect detected")
             "time": current_time,
             "item": np.random.randint(1000, 2000),
             "stream": np.random.randint(1, 6),
@@ -145,34 +142,40 @@ async def predict_defect(file: UploadFile = File(...)):
         }
         defect_metadata_cache[file.filename] = defect_info
 
-        # Encode image to return
+        # Encode the modified image to JPEG format in memory
         is_success, buffer = cv2.imencode(".jpg", img)
         if not is_success:
-            raise HTTPException(status_code=500, detail="Failed to process image")
+            raise HTTPException(status_code=500, detail="Failed to encode processed image")
 
+        # Return the image as a streaming response
         return StreamingResponse(io.BytesIO(buffer.tobytes()), media_type="image/jpeg")
 
-    finally:
-        if os.path.exists(temp_image_path):
-            os.remove(temp_image_path)
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error during prediction: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
+    # finally:
+        # No need for finally block if not saving temp file
+        # if os.path.exists(temp_image_path):
+        #     os.remove(temp_image_path)
 
 
 @app.get("/predict/metadata")
 async def get_defect_metadata(filename: str):
     if filename not in defect_metadata_cache:
-        raise HTTPException(status_code=404, detail="Metadata not found")
-    
+        raise HTTPException(status_code=404, detail="Metadata not found for this filename. Prediction might not have been run or cache cleared.")
+
     return defect_metadata_cache[filename]
+
 
 @app.post("/store/")
 async def store_defect(defect: DefectStore):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    
     try:
         c.execute(
             '''
-            INSERT INTO defects 
+            INSERT INTO defects
             (defect_type, timestamp, item_number, stream_number, batch_number, image_name, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
             ''',
@@ -188,14 +191,22 @@ async def store_defect(defect: DefectStore):
         )
         conn.commit()
         return {"status": "success", "message": "Defect information stored successfully"}
-    
-    except Exception as e:
+    except sqlite3.Error as e: # Catch specific DB errors
         conn.rollback()
+        print(f"Database error: {e}") # Log DB errors
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
-    
+    except Exception as e: # Catch other potential errors
+        conn.rollback()
+        print(f"Error storing defect: {e}") # Log other errors
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
     finally:
         conn.close()
 
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    # Ensure model is loaded before starting the server
+    if model is None:
+        print("Exiting: YOLO model could not be loaded.")
+    else:
+        uvicorn.run(app, host="127.0.0.1", port=8000)
