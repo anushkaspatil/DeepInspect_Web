@@ -1,0 +1,26 @@
+{
+  "files": {
+    "main.css": "/static/css/main.1c7314b2.css",
+    "main.js": "/static/js/main.373db2b1.js",
+    "static/js/453.64512fd7.chunk.js": "/static/js/453.64512fd7.chunk.js",
+    "static/media/batch.jpg": "/static/media/batch.6a41e0e8eff8ec9a5be5.jpg",
+    "static/media/real_time_diag.png": "/static/media/real_time_diag.109a5f5964ae168ee6bd.png",
+    "static/media/home_bg.jpg": "/static/media/home_bg.964518f6852c9c68042d.jpg",
+    "static/media/feature2.avif": "/static/media/feature2.f57fef208760f7ba5a90.avif",
+    "static/media/feature1.avif": "/static/media/feature1.e11309c4c384bee781eb.avif",
+    "static/media/sapl-logo.png": "/static/media/sapl-logo.a4ae761e8342679ad48e.png",
+    "static/media/alerts.jpg": "/static/media/alerts.76bca73756ca7679d419.jpg",
+    "static/media/feature3.avif": "/static/media/feature3.13758a6d34d027dbf69e.avif",
+    "static/media/background.avif": "/static/media/background.a64f832a6b16d50134c7.avif",
+    "static/media/profile.jpg": "/static/media/profile.3a81f8386977fd0451f7.jpg",
+    "static/media/pvgcoet-logo.jpg": "/static/media/pvgcoet-logo.94bde560e0c9865f7ee7.jpg",
+    "index.html": "/index.html",
+    "main.1c7314b2.css.map": "/static/css/main.1c7314b2.css.map",
+    "main.373db2b1.js.map": "/static/js/main.373db2b1.js.map",
+    "453.64512fd7.chunk.js.map": "/static/js/453.64512fd7.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.1c7314b2.css",
+    "static/js/main.373db2b1.js"
+  ]
+}

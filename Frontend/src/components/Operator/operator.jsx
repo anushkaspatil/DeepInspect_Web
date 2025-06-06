@@ -1,13 +1,21 @@
 import React, { useState } from "react";
-import { Container, Row, Col, Card, Button, Form, Spinner } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Form,
+  Spinner,
+} from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
-import alerts from '../../assets/alerts.jpg';
-import diagnostics from '../../assets/real_time_diag.png';
-import batchAlerts from '../../assets/batch.jpg';
-import profile from '../../assets/profile.jpg';
+import alerts from "../../assets/alerts.jpg";
+import diagnostics from "../../assets/real_time_diag.png";
+import batchAlerts from "../../assets/batch.jpg";
+import profile from "../../assets/profile.jpg";
 import "./operator.css";
-
+const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
 function Operator() {
   // State variables
   const [selectedFile, setSelectedFile] = useState(null);
@@ -43,7 +51,7 @@ function Operator() {
 
     try {
       // Send the image to your API endpoint
-      const response = await axios.post("http://127.0.0.1:8000/predict/", formData, {
+      const response = await axios.post(`${API_BASE}/predict/`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -58,9 +66,12 @@ function Operator() {
       // to get defect information, you would handle that here
       try {
         // You'll need to implement this endpoint on your backend to return defect metadata
-        const metadataResponse = await axios.get("http://127.0.0.1:8000/predict/metadata", {
-          params: { filename: selectedFile.name }
-        });
+        const metadataResponse = await axios.get(
+          `${API_BASE}/predict/metadata`,
+          {
+            params: { filename: selectedFile.name },
+          }
+        );
 
         setDefectInfo(metadataResponse.data);
       } catch (metadataError) {
@@ -93,7 +104,7 @@ function Operator() {
     setIsLoading(true);
 
     try {
-      await axios.post("http://127.0.0.1:8000/store/", {
+      await axios.post(`${API_BASE}/store/`, {
         defect_type: defectInfo.type,
         timestamp: defectInfo.time,
         item_number: defectInfo.item,
@@ -145,7 +156,13 @@ function Operator() {
           >
             {isLoading ? (
               <>
-                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                />
                 <span className="ms-2">Processing...</span>
               </>
             ) : (
@@ -156,7 +173,7 @@ function Operator() {
           {/* Defect Result Card */}
           {/* Defect Result Card */}
           {predictedImg && defectInfo && (
-            <Card className="mb-3 card" >
+            <Card className="mb-3 card">
               <Row className="g-0" style={{ height: "100%" }}>
                 <Col style={{ width: "70%", height: "100%" }}>
                   <Card.Img
@@ -165,9 +182,11 @@ function Operator() {
                     alt="Detected Defect"
                   />
                 </Col>
-                <Col style={{ width: "30%"}}>
+                <Col style={{ width: "30%" }}>
                   <Card.Body className="p-3">
-                    <Card.Title className="mt-2 mb-3 fw-bold">DEFECT DETECTED</Card.Title>
+                    <Card.Title className="mt-2 mb-3 fw-bold">
+                      DEFECT DETECTED
+                    </Card.Title>
                     <Card.Text className="mb-1" style={{ lineHeight: "1.2" }}>
                       <strong>Defect Type:</strong> {defectInfo.type}
                     </Card.Text>
@@ -198,7 +217,7 @@ function Operator() {
                           onClick={handleStoreDefect}
                           disabled={isLoading}
                         >
-                          {isLoading ? 'Storing...' : 'Yes'}
+                          {isLoading ? "Storing..." : "Yes"}
                         </Button>
                         <Button
                           variant="secondary"
@@ -214,7 +233,6 @@ function Operator() {
               </Row>
             </Card>
           )}
-
         </Col>
 
         {/* Right Section */}
@@ -224,13 +242,16 @@ function Operator() {
               { img: alerts, text: "All Alerts" },
               { img: diagnostics, text: "Real-time Diagnostics" },
               { img: batchAlerts, text: "Batch Alerts" },
-              { img: profile, text: "My Profile" }
+              { img: profile, text: "My Profile" },
             ].map((item, index) => (
               <Col key={index} xs={6}>
                 <Card className="bg-light text-dark text-center">
                   <Card.Img src={item.img} alt={item.text} />
                   <Card.Body>
-                    <Card.Text className="mb-0" style={{ fontSize: "14px", lineHeight: "1.2" }}>
+                    <Card.Text
+                      className="mb-0"
+                      style={{ fontSize: "14px", lineHeight: "1.2" }}
+                    >
                       {item.text}
                     </Card.Text>
                   </Card.Body>
