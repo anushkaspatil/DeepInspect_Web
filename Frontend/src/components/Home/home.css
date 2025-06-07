@@ -1,7 +1,81 @@
-.App-header{
-    background-image: url('src/assets/home_bg.jpg');
-    background-size: cover;
-    background-position: center;
-    height: 100vh; /* full viewport height */
-    width: 100%;
+/* home.css */
+
+.home-wrapper {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow-x: hidden;
+}
+
+.hero-section {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.bg-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+.overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  text-align: center;
+  z-index: 2;
+  padding: 0 1rem;
+}
+
+.headline {
+  font-size: 3rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.brand {
+  font-size: 4rem;
+  font-weight: 800;
+  color: white;
+  margin: 0.2rem 0;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.tagline {
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin-top: 1rem;
+  color: #f0f0f0;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Sections */
+section {
+  background-color: #f9f9f9;
+}
+
+section:nth-of-type(even) {
+  background-color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .headline {
+    font-size: 2.2rem;
+  }
+
+  .brand {
+    font-size: 2.8rem;
+  }
+
+  .tagline {
+    font-size: 1.2rem;
+  }
 }

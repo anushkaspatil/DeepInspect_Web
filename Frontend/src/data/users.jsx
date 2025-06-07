@@ -1,11 +1,11 @@
-const dummyUsers = [
+const users = [
   {
     id: 1,
     username: "admin1",
     password: "a123",
     role: "admin",
+    name: "Admin One",
     email: "admin1@gmail.com",
-    fullName: "Admin One",
     phone: "1234567890"
   },
   {
@@ -13,8 +13,8 @@ const dummyUsers = [
     username: "supervisor1",
     password: "s123",
     role: "supervisor",
+    name: "Supervisor One",
     email: "supervisor1@gmail.com",
-    fullName: "Supervisor One",
     phone: "9876543210"
   },
   {
@@ -22,8 +22,8 @@ const dummyUsers = [
     username: "operator1",
     password: "o123",
     role: "operator",
+    name: "Operator One",
     email: "operator1@gmail.com",
-    fullName: "Operator One",
     phone: "5556667777"
   },
   {
@@ -31,8 +31,8 @@ const dummyUsers = [
     username: "admin2",
     password: "a456",
     role: "admin",
-    email: "admin1@gmail.com",
-    fullName: "Admin Two",
+    name: "Admin Two",
+    email: "admin2@gmail.com",
     phone: "5296374851"
   },
   {
@@ -40,8 +40,8 @@ const dummyUsers = [
     username: "supervisor2",
     password: "s456",
     role: "supervisor",
+    name: "Supervisor Two",
     email: "supervisor2@gmail.com",
-    fullName: "Supervisor Two",
     phone: "1231231234"
   },
   {
@@ -49,10 +49,10 @@ const dummyUsers = [
     username: "operator2",
     password: "o456",
     role: "operator",
-    email: "operator2@gamil.com",
-    fullName: "Operator Two",
+    name: "Operator Two",
+    email: "operator2@gmail.com",
     phone: "9879879876"
   }
 ];
 
-export default dummyUsers;
+export default users;

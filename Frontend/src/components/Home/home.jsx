@@ -1,18 +1,27 @@
+import React from "react";
 import About from "../About/about";
 import Features from "../Features/features";
-import Partners from "../Partners/partners";  
+import Partners from "../Partners/partners";
 import Footer from "../Footer/footer";
-import background from '../../assets/home_bg.jpg'; // adjust path
+import './home.css';
+import backgroundVideo from '../../assets/home_page_vid.mp4'; // update path as needed
 
-function Home(){
-    return (
-      <div className="App">
-        <header className="App-header">
-          <h1 className='display-4'>WELCOME TO</h1>
-          <h1 className='display-4 fw-bold'><strong>DEEPINSPECT!</strong></h1>
-          <h3>Defect Detection and Localization</h3>
-        </header>
-        <section id="about">
+function Home() {
+  return (
+    <div className="home-wrapper">
+      <header className="hero-section">
+        <video autoPlay loop muted className="bg-video">
+          <source src={backgroundVideo} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+        <div className="overlay">
+          <h1 className='headline'>WELCOME TO</h1>
+          <h1 className='brand'>DEEPINSPECT!</h1>
+          <h3 className='tagline'>Defect Detection and Localization</h3>
+        </div>
+      </header>
+
+      <section id="about">
         <About />
       </section>
 
@@ -23,9 +32,10 @@ function Home(){
       <section id="partners">
         <Partners />
       </section>
-      </div>
-    );
-  }
-  
-  export default Home;
-  
+
+      <Footer />
+    </div>
+  );
+}
+
+export default Home;
