@@ -227,8 +227,8 @@
 }
 
 .stat-number {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 1.6rem;
+  font-weight: 600;
   color: var(--primary-dark);
   line-height: 1;
   margin-bottom: 0.25rem;

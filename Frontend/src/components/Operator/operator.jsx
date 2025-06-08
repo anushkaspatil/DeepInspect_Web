@@ -265,20 +265,20 @@ function Operator() {
                   <Row>
                     <Col xs={4}>
                       <div className="stat-item">
-                        <div className="stat-number">247</div>
-                        <div className="stat-label">Images Today</div>
+                        <div className="stat-number">25</div>
+                        <div className="stat-label">Id No</div>
                       </div>
                     </Col>
                     <Col xs={4}>
                       <div className="stat-item">
-                        <div className="stat-number">12</div>
-                        <div className="stat-label">Defects Found</div>
+                        <div className="stat-number">operator1</div>
+                        <div className="stat-label">Username</div>
                       </div>
                     </Col>
                     <Col xs={4}>
                       <div className="stat-item">
-                        <div className="stat-number">95.2%</div>
-                        <div className="stat-label">Accuracy</div>
+                        <div className="stat-number">Provided</div>
+                        <div className="stat-label">Access</div>
                       </div>
                     </Col>
                   </Row>

@@ -3,24 +3,26 @@ import About from "../About/about";
 import Features from "../Features/features";
 import Partners from "../Partners/partners";
 import Footer from "../Footer/footer";
-import Navbar from "../Navbar/nav"; // ✅ Import Navbar here
+import Navbar from "../Navbar/nav";
 import './home.css';
 import backgroundVideo from '../../assets/home_page_vid.mp4';
 
 function Home() {
   return (
     <div className="home-wrapper">
-      <Navbar /> {/* ✅ Add Navbar here */}
-      
+      <Navbar />
+
       <header className="hero-section">
         <video autoPlay loop muted className="bg-video">
           <source src={backgroundVideo} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
         <div className="overlay">
-          <h1 className='headline'>WELCOME TO</h1>
-          <h1 className='brand'>DEEPINSPECT!</h1>
-          <h3 className='tagline'>Defect Detection and Localization</h3>
+          <div className="overlay-background">
+            <h1 className='headline'>WELCOME TO</h1>
+            <h1 className='brand'>DEEPINSPECT!</h1>
+            <h3 className='tagline'>Defect Detection and Localization</h3>
+          </div>
         </div>
       </header>
 
