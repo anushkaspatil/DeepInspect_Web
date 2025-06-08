@@ -71,17 +71,17 @@ const Login = () => {
                   <div className="text-center w-100 fade-in-up">
                     
                     {/* Brand Section */}
-                    <div className="mb-5">
+                    <div className="mb-3">
                       <div className="brand-icon">
                         <Shield size={48} className="text-white" />
                       </div>
-                      <h1 className="display-4 fw-bold mb-3">SecureAccess</h1>
-                      <p className="fs-5 opacity-75">Enterprise Management Portal</p>
+                      <h1 className="display-6 fw-bold mb-1">SecureAccess</h1>
+                      <p className="fs-6 opacity-75">Enterprise Management Portal</p>
                     </div>
 
                     {/* Role Selection */}
                     <div className="mb-5">
-                      <h3 className="h2 fw-semibold mb-4">Select Your Role</h3>
+                      <h3 className="h3  fw-semibold mb-4">Select Your Role</h3>
                       
                       <div className="d-grid gap-3">
                         {Object.entries(roleConfig).map(([key, config]) => {

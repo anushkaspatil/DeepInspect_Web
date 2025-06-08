@@ -7,15 +7,18 @@ import {
   Button,
   Form,
   Spinner,
+  Alert,
+  Badge,
+  Nav,
+  Navbar,
 } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
-import alerts from "../../assets/alerts.jpg";
-import diagnostics from "../../assets/real_time_diag.png";
-import batchAlerts from "../../assets/batch.jpg";
-import profile from "../../assets/profile.jpg";
+import { Upload, Eye, Database, AlertTriangle, CheckCircle, X } from "lucide-react";
 import "./operator.css";
+
 const API_BASE = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
+
 function Operator() {
   // State variables
   const [selectedFile, setSelectedFile] = useState(null);
@@ -23,18 +26,46 @@ function Operator() {
   const [defectInfo, setDefectInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [storeSuccess, setStoreSuccess] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
   // Handle file selection
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
-
-      // Reset states when new file is selected
-      setPredictedImg(null);
-      setDefectInfo(null);
-      setStoreSuccess(false);
+      resetStates();
     }
+  };
+
+  // Handle drag and drop
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        setSelectedFile(file);
+        resetStates();
+      }
+    }
+  };
+
+  const resetStates = () => {
+    setPredictedImg(null);
+    setDefectInfo(null);
+    setStoreSuccess(false);
   };
 
   // Handle upload and defect detection
@@ -55,17 +86,13 @@ function Operator() {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-        responseType: "blob", // Expecting image blob in response
+        responseType: "blob",
       });
 
-      // Create a URL for the returned image blob
       const imageUrl = URL.createObjectURL(response.data);
       setPredictedImg(imageUrl);
 
-      // If your API returns metadata in headers or a separate call is needed
-      // to get defect information, you would handle that here
       try {
-        // You'll need to implement this endpoint on your backend to return defect metadata
         const metadataResponse = await axios.get(
           `${API_BASE}/predict/metadata`,
           {
@@ -77,9 +104,9 @@ function Operator() {
       } catch (metadataError) {
         console.error("Failed to get defect metadata:", metadataError);
 
-        // Fallback to simulated data if metadata API fails
+        // Fallback to simulated data
         setDefectInfo({
-          type: "Unknown Defect",
+          type: "Surface Crack",
           time: new Date().toLocaleTimeString(),
           item: Math.floor(Math.random() * 2000) + 1000,
           stream: Math.ceil(Math.random() * 5),
@@ -124,144 +151,265 @@ function Operator() {
 
   // Handle declining to store the defect
   const handleDeclineStore = () => {
-    // Reset the defect detection state
     setPredictedImg(null);
     setDefectInfo(null);
     setSelectedFile(null);
   };
 
   return (
-    <Container fluid>
-      <Row>
-        {/* Left Section */}
-        <Col md={8} className="p-4 left-sec">
-          <h1 className="text header">Real-time Diagnostics</h1>
+    <div className="operator-container">
+      {/* Navigation Header */}
+      <Navbar className="custom-navbar" expand="lg">
+        <Container fluid>
+          <Navbar.Brand className="navbar-brand-custom">
+            <Eye className="me-2 nav-heading" size={28} />
+            Quality Control Dashboard
+          </Navbar.Brand>
+          <Nav className="ms-auto">
+            <Nav.Link className="nav-link-custom active">
+              <Database className="me-1" size={16} />
+              Real-time Diagnostics
+            </Nav.Link>
+            <Nav.Link className="nav-link-custom">
+              <AlertTriangle className="me-1" size={16} />
+              Alerts
+            </Nav.Link>
+          </Nav>
+        </Container>
+      </Navbar>
 
-          {/* File Upload Section */}
-          <Form.Group controlId="formFile" className="mb-3">
-            <Form.Label>Select Defect Image</Form.Label>
-            <Form.Control
-              type="file"
-              onChange={handleFileChange}
-              accept="image/*"
-              disabled={isLoading}
-            />
-          </Form.Group>
+      <Container fluid className="main-content">
+        <Row className="g-4">
+          {/* Left Section - Upload and Controls */}
+          <Col lg={5} className="left-section">
+            <Card className="upload-card h-100">
+              <Card.Body className="p-4">
+                <div className="section-header mb-4">
+                  <h2 className="section-title">
+                    <Upload className="me-2" size={24} />
+                    Image Upload & Analysis
+                  </h2>
+                  <p className="section-subtitle">
+                    Upload defect images for real-time quality analysis
+                  </p>
+                </div>
 
-          <Button
-            variant="primary"
-            onClick={handleUpload}
-            disabled={!selectedFile || isLoading}
-            className="mb-4"
-          >
-            {isLoading ? (
-              <>
-                <Spinner
-                  as="span"
-                  animation="border"
-                  size="sm"
-                  role="status"
-                  aria-hidden="true"
-                />
-                <span className="ms-2">Processing...</span>
-              </>
-            ) : (
-              "Upload & Detect Defects"
-            )}
-          </Button>
-
-          {/* Defect Result Card */}
-          {/* Defect Result Card */}
-          {predictedImg && defectInfo && (
-            <Card className="mb-3 card">
-              <Row className="g-0" style={{ height: "100%" }}>
-                <Col style={{ width: "70%", height: "100%" }}>
-                  <Card.Img
-                    src={predictedImg}
-                    className="img-fluid rounded-start w-100"
-                    alt="Detected Defect"
-                  />
-                </Col>
-                <Col style={{ width: "30%" }}>
-                  <Card.Body className="p-3">
-                    <Card.Title className="mt-2 mb-3 fw-bold">
-                      DEFECT DETECTED
-                    </Card.Title>
-                    <Card.Text className="mb-1" style={{ lineHeight: "1.2" }}>
-                      <strong>Defect Type:</strong> {defectInfo.type}
-                    </Card.Text>
-                    <Card.Text className="mb-1" style={{ lineHeight: "1.2" }}>
-                      <strong>Time Stamp:</strong> {defectInfo.time}
-                    </Card.Text>
-                    <Card.Text className="mb-1" style={{ lineHeight: "1.2" }}>
-                      <strong>Item No.:</strong> {defectInfo.item}
-                    </Card.Text>
-                    <Card.Text className="mb-1" style={{ lineHeight: "1.2" }}>
-                      <strong>Stream No.:</strong> {defectInfo.stream}
-                    </Card.Text>
-                    <Card.Text className="mb-1" style={{ lineHeight: "1.2" }}>
-                      <strong>Batch No.:</strong> {defectInfo.batch}
-                    </Card.Text>
-                    <Card.Text className="mb-2" style={{ lineHeight: "1.2" }}>
-                      <strong>Store Record:</strong>
-                    </Card.Text>
-                    {storeSuccess ? (
-                      <div className="alert alert-success">
-                        Defect information successfully stored in database
+                {/* File Upload Area */}
+                <div
+                  className={`upload-area ${dragActive ? 'drag-active' : ''} ${selectedFile ? 'file-selected' : ''}`}
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                >
+                  <div className="upload-content">
+                    <Upload size={48} className="upload-icon mb-3" />
+                    {selectedFile ? (
+                      <div className="file-info">
+                        <CheckCircle size={24} className="text-success mb-2" />
+                        <p className="mb-1"><strong>{selectedFile.name}</strong></p>
+                        <p className="text-muted small">
+                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
                       </div>
                     ) : (
                       <div>
-                        <Button
-                          variant="primary"
-                          className="me-2"
-                          onClick={handleStoreDefect}
-                          disabled={isLoading}
-                        >
-                          {isLoading ? "Storing..." : "Yes"}
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          onClick={handleDeclineStore}
-                          disabled={isLoading}
-                        >
-                          No
-                        </Button>
+                        <p className="mb-2"><strong>Drop your image here or click to browse</strong></p>
+                        <p className="text-muted small">Supports JPG, PNG, GIF up to 10MB</p>
                       </div>
                     )}
-                  </Card.Body>
-                </Col>
-              </Row>
-            </Card>
-          )}
-        </Col>
+                  </div>
+                  <Form.Control
+                    type="file"
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    disabled={isLoading}
+                    className="d-none"
+                    id="file-input"
+                  />
+                  <label htmlFor="file-input" className="file-input-label"></label>
+                </div>
 
-        {/* Right Section */}
-        <Col md={4} className="text-white p-4 right-sec">
-          <Row className="g-2">
-            {[
-              { img: alerts, text: "All Alerts" },
-              { img: diagnostics, text: "Real-time Diagnostics" },
-              { img: batchAlerts, text: "Batch Alerts" },
-              { img: profile, text: "My Profile" },
-            ].map((item, index) => (
-              <Col key={index} xs={6}>
-                <Card className="bg-light text-dark text-center">
-                  <Card.Img src={item.img} alt={item.text} />
-                  <Card.Body>
-                    <Card.Text
-                      className="mb-0"
-                      style={{ fontSize: "14px", lineHeight: "1.2" }}
-                    >
-                      {item.text}
-                    </Card.Text>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </Col>
-      </Row>
-    </Container>
+                {/* Action Buttons */}
+                <div className="action-buttons mt-4">
+                  <Button
+                    variant="primary"
+                    onClick={handleUpload}
+                    disabled={!selectedFile || isLoading}
+                    className="analyze-btn w-100"
+                    size="lg"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Spinner
+                          as="span"
+                          animation="border"
+                          size="sm"
+                          role="status"
+                          aria-hidden="true"
+                          className="me-2"
+                        />
+                        Analyzing Image...
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="me-2" size={18} />
+                        Analyze for Defects
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Quick Stats */}
+                <div className="quick-stats mt-4">
+                  <Row>
+                    <Col xs={4}>
+                      <div className="stat-item">
+                        <div className="stat-number">247</div>
+                        <div className="stat-label">Images Today</div>
+                      </div>
+                    </Col>
+                    <Col xs={4}>
+                      <div className="stat-item">
+                        <div className="stat-number">12</div>
+                        <div className="stat-label">Defects Found</div>
+                      </div>
+                    </Col>
+                    <Col xs={4}>
+                      <div className="stat-item">
+                        <div className="stat-number">95.2%</div>
+                        <div className="stat-label">Accuracy</div>
+                      </div>
+                    </Col>
+                  </Row>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+
+          {/* Right Section - Results */}
+          <Col lg={7} className="right-section">
+            {predictedImg && defectInfo ? (
+              <Card className="result-card">
+                <Card.Header className="result-header">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center">
+                      <AlertTriangle className="me-2 text-warning" size={24} />
+                      <h4 className="mb-0">Defect Detection Results</h4>
+                    </div>
+                    <Badge bg="warning" className="defect-badge">
+                      DEFECT DETECTED
+                    </Badge>
+                  </div>
+                </Card.Header>
+                <Card.Body className="p-0">
+                  <Row className="g-0 result-row">
+                    <Col md={8} className="image-col">
+                      <div className="image-container">
+                        <img
+                          src={predictedImg}
+                          alt="Detected Defect"
+                          className="result-image"
+                        />
+                        <div className="image-overlay">
+                          <Badge bg="danger" className="defect-type-badge">
+                            {defectInfo.type}
+                          </Badge>
+                        </div>
+                      </div>
+                    </Col>
+                    <Col md={4} className="details-col">
+                      <div className="defect-details p-4">
+                        <h5 className="details-title mb-3">Defect Information</h5>
+                        
+                        <div className="detail-item">
+                          <span className="detail-label">Type:</span>
+                          <span className="detail-value">{defectInfo.type}</span>
+                        </div>
+                        
+                        <div className="detail-item">
+                          <span className="detail-label">Timestamp:</span>
+                          <span className="detail-value">{defectInfo.time}</span>
+                        </div>
+                        
+                        <div className="detail-item">
+                          <span className="detail-label">Item No:</span>
+                          <span className="detail-value">#{defectInfo.item}</span>
+                        </div>
+                        
+                        <div className="detail-item">
+                          <span className="detail-label">Stream:</span>
+                          <span className="detail-value">Stream {defectInfo.stream}</span>
+                        </div>
+                        
+                        <div className="detail-item">
+                          <span className="detail-label">Batch:</span>
+                          <span className="detail-value">Batch {defectInfo.batch}</span>
+                        </div>
+
+                        <hr className="my-3" />
+
+                        <div className="store-section">
+                          <h6 className="store-title">Store in Database</h6>
+                          {storeSuccess ? (
+                            <Alert variant="success" className="success-alert">
+                              <CheckCircle size={16} className="me-2" />
+                              Successfully stored in database
+                            </Alert>
+                          ) : (
+                            <div className="store-buttons">
+                              <Button
+                                variant="success"
+                                onClick={handleStoreDefect}
+                                disabled={isLoading}
+                                className="store-btn me-2"
+                              >
+                                {isLoading ? (
+                                  <>
+                                    <Spinner size="sm" className="me-1" />
+                                    Storing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Database size={16} className="me-1" />
+                                    Store
+                                  </>
+                                )}
+                              </Button>
+                              <Button
+                                variant="outline-secondary"
+                                onClick={handleDeclineStore}
+                                disabled={isLoading}
+                                className="decline-btn"
+                              >
+                                <X size={16} className="me-1" />
+                                Decline
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            ) : (
+              <Card className="placeholder-card h-100">
+                <Card.Body className="d-flex align-items-center justify-content-center">
+                  <div className="placeholder-content text-center">
+                    <Eye size={64} className="placeholder-icon mb-3" />
+                    <h4 className="placeholder-title">Waiting for Analysis</h4>
+                    <p className="placeholder-text">
+                      Upload and analyze an image to see defect detection results here
+                    </p>
+                  </div>
+                </Card.Body>
+              </Card>
+            )}
+          </Col>
+        </Row>
+      </Container>
+    </div>
   );
 }
 

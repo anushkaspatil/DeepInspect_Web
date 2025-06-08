@@ -3,12 +3,15 @@ import About from "../About/about";
 import Features from "../Features/features";
 import Partners from "../Partners/partners";
 import Footer from "../Footer/footer";
+import Navbar from "../Navbar/nav"; // ✅ Import Navbar here
 import './home.css';
-import backgroundVideo from '../../assets/home_page_vid.mp4'; // update path as needed
+import backgroundVideo from '../../assets/home_page_vid.mp4';
 
 function Home() {
   return (
     <div className="home-wrapper">
+      <Navbar /> {/* ✅ Add Navbar here */}
+      
       <header className="hero-section">
         <video autoPlay loop muted className="bg-video">
           <source src={backgroundVideo} type="video/mp4" />

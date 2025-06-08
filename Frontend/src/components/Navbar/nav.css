@@ -13,3 +13,10 @@
   .loginBtn{
     margin-right: 2rem;
   }
+
+  .transparent-navbar {
+  background-color: transparent !important;
+  position: absolute;
+  width: 100%;
+  z-index: 1000;
+}

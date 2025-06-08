@@ -7,7 +7,7 @@ function CustomNavbar() {
   const navigate = useNavigate();
 
   return (
-    <Navbar bg="dark" variant="dark" expand="lg" className="border-bottom border-body px-5 py-3">
+    <Navbar bg="dark" variant="dark" expand="lg" className="transparent-navbar border-bottom border-body px-5 py-3">
       <Container fluid>
         {/* Brand Name */}
         <Navbar.Brand className="fs-4 fw-bold px-3">DEEPINSPECT</Navbar.Brand>
